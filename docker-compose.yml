@@ -1,0 +1,48 @@
+services:
+  configservice:
+    image: halitkalayci/configserver
+    mem_limit: 700m
+    ports:
+      - "8071:8071"
+    networks:
+      - mynetwork
+
+  accounts:
+    image: halitkalayci/accountservice
+    ports:
+      - "8080:8080"
+    networks:
+      - mynetwork
+    depends_on:
+      - configservice
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_CONFIG_IMPORT: configserver:http://configservice:8071
+      SPRING_APPLICATION_NAME: account
+
+  loans:
+    image: halitkalayci/loanservice
+    ports:
+      - "8090:8090"
+    networks:
+      - mynetwork
+    depends_on:
+      - configservice
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_CONFIG_IMPORT: configserver:http://configservice:8071
+      SPRING_APPLICATION_NAME: loans
+networks:
+  mynetwork:
